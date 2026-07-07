@@ -14,6 +14,8 @@
 #include <hyprland/src/layout/LayoutManager.hpp>
 #include <hyprland/src/managers/animation/AnimationManager.hpp>
 #include <hyprland/src/config/ConfigValue.hpp>
+#include <hyprland/src/config/ConfigManager.hpp>
+#include <optional>
 #include <hyprland/src/helpers/time/Time.hpp>
 #include <hyprland/src/event/EventBus.hpp>
 #include <hyprland/src/config/values/types/IntValue.hpp>
@@ -139,11 +141,41 @@ inline SConfig config = {
 };
 
 namespace HyprConfig {
-    static const CConfigValue<Config::INTEGER> workspaceSwipeDistance = CConfigValue<Config::INTEGER>("gestures:workspace_swipe_distance");
-    static const CConfigValue<Config::INTEGER> workspaceSwipeMinSpeedToForce = CConfigValue<Config::INTEGER>("gestures:workspace_swipe_min_speed_to_force");
-    static const CConfigValue<Config::FLOAT> workspaceSwipeCancelRatio = CConfigValue<Config::FLOAT>("gestures:workspace_swipe_cancel_ratio");
-    static const CConfigValue<Config::INTEGER> hyprsplitNumWorkspaces = CConfigValue<Config::INTEGER>("plugin:hyprsplit:num_workspaces");
-    static const CConfigValue<Config::INTEGER> splitMonitorWorkspacesCount = CConfigValue<Config::INTEGER>("plugin:split-monitor-workspaces:count");
+    inline std::optional<Config::INTEGER> getIntegerSafe(const std::string& name) {
+        auto reply = Config::mgr()->getConfigValue(name);
+        if (reply.dataptr && reply.type) {
+            if (*reply.type == typeid(Config::INTEGER)) {
+                return **reinterpret_cast<Config::INTEGER* const*>(reply.dataptr);
+            }
+        }
+        return std::nullopt;
+    }
+
+    inline std::optional<Config::FLOAT> getFloatSafe(const std::string& name) {
+        auto reply = Config::mgr()->getConfigValue(name);
+        if (reply.dataptr && reply.type) {
+            if (*reply.type == typeid(Config::FLOAT)) {
+                return **reinterpret_cast<Config::FLOAT* const*>(reply.dataptr);
+            }
+        }
+        return std::nullopt;
+    }
+
+    inline std::optional<Config::INTEGER> getWorkspaceSwipeDistance() {
+        return getIntegerSafe("gestures:workspace_swipe_distance");
+    }
+    inline std::optional<Config::INTEGER> getWorkspaceSwipeMinSpeedToForce() {
+        return getIntegerSafe("gestures:workspace_swipe_min_speed_to_force");
+    }
+    inline std::optional<Config::FLOAT> getWorkspaceSwipeCancelRatio() {
+        return getFloatSafe("gestures:workspace_swipe_cancel_ratio");
+    }
+    inline std::optional<Config::INTEGER> getHyprsplitNumWorkspaces() {
+        return getIntegerSafe("plugin:hyprsplit:num_workspaces");
+    }
+    inline std::optional<Config::INTEGER> getSplitMonitorWorkspacesCount() {
+        return getIntegerSafe("plugin:split-monitor-workspaces:count");
+    }
 }
 
 extern int numWorkspaces;

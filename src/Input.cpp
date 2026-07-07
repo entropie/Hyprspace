@@ -130,7 +130,7 @@ bool CHyprspaceWidget::beginSwipe(IPointer::SSwipeBeginEvent e) {
 
 bool CHyprspaceWidget::updateSwipe(IPointer::SSwipeUpdateEvent e) {
     constexpr int fingers = 3;
-    const auto distance = *HyprConfig::workspaceSwipeDistance;
+    const auto distance = HyprConfig::getWorkspaceSwipeDistance().value();
 
     // restrict swipe to a axis with the most significant movement to prevent misinput
     if (abs(e.delta.x) / abs(e.delta.y) < 1) {
@@ -178,8 +178,8 @@ bool CHyprspaceWidget::endSwipe(IPointer::SSwipeEndEvent e) {
         curSwipeOffset = -10.;
     }
     else {
-        const auto swipeForceSpeed = *HyprConfig::workspaceSwipeMinSpeedToForce;
-        const auto cancelRatio = *HyprConfig::workspaceSwipeCancelRatio;
+        const auto swipeForceSpeed = HyprConfig::getWorkspaceSwipeMinSpeedToForce().value();
+        const auto cancelRatio = HyprConfig::getWorkspaceSwipeCancelRatio().value();
         double swipeTravel = (config.panelHeight->value() + config.reservedArea->value()) * getOwner()->m_scale;
         if (activeBeforeSwipe) {
             if ((curSwipeOffset < swipeTravel * cancelRatio) || avgSwipeSpeed < -swipeForceSpeed) {

@@ -353,11 +353,12 @@ void reloadConfig() {
     }
 
     // get number of workspaces from hyprsplit or split-monitor-workspaces plugin config
-    auto numWorkspacesConfig = HyprConfig::hyprsplitNumWorkspaces;
-    if (!numWorkspacesConfig.good())
-        numWorkspacesConfig = HyprConfig::splitMonitorWorkspacesCount;
-    if (numWorkspacesConfig.good())
-        numWorkspaces = std::any_cast<Hyprlang::INT>(*numWorkspacesConfig);
+    numWorkspaces = -1;
+    auto numWorkspacesOpt = HyprConfig::getHyprsplitNumWorkspaces();
+    if (!numWorkspacesOpt.has_value())
+        numWorkspacesOpt = HyprConfig::getSplitMonitorWorkspacesCount();
+    if (numWorkspacesOpt.has_value())
+        numWorkspaces = numWorkspacesOpt.value();
 
     // TODO: schedule frame for monitor?
 }
