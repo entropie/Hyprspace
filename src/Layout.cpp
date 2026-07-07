@@ -5,9 +5,9 @@
 // FIXME: preserve original workspace rules
 void CHyprspaceWidget::updateLayout() {
 
-    if (!Config::affectStrut) return;
+    if (!config.affectStrut->value()) return;
 
-    const auto currentHeight = Config::panelHeight + Config::reservedArea;
+    const auto currentHeight = config.panelHeight->value() + config.reservedArea->value();
     const auto pMonitor = getOwner();
     if (!pMonitor) return;
 
@@ -23,7 +23,7 @@ void CHyprspaceWidget::updateLayout() {
     auto* const PGAPSOUT = static_cast<Config::CCssGapData*>(PGAPSOUTBASE);
 
     if (active) {
-        if (!Config::onBottom)
+        if (!config.onBottom->value())
             pMonitor->m_reservedArea = Desktop::CReservedArea(currentHeight, 0, 0, 0);
         else
             pMonitor->m_reservedArea = Desktop::CReservedArea(0, 0, currentHeight, 0);
@@ -46,7 +46,7 @@ void CHyprspaceWidget::updateLayout() {
             if (ws && ws->m_monitor && ws->m_monitor->m_id == ownerID && ws->m_id != oActiveWorkspace->m_id) {
                 pMonitor->m_activeWorkspace = ws.lock();
                 const auto curRules = std::to_string(pMonitor->activeWorkspaceID()) + ", gapsin:" + PGAPSIN->toString() + ", gapsout:" + PGAPSOUT->toString();
-                if (Config::overrideGaps) {
+                if (config.overrideGaps->value()) {
                     if (const auto legacy = Config::Legacy::mgr().lock())
                         legacy->handleWorkspaceRules("", curRules);
                 }
@@ -55,8 +55,8 @@ void CHyprspaceWidget::updateLayout() {
         }
         pMonitor->m_activeWorkspace = oActiveWorkspace;
 
-        const auto curRules = std::to_string(pMonitor->activeWorkspaceID()) + ", gapsin:" + std::to_string(Config::gapsIn) + ", gapsout:" + std::to_string(Config::gapsOut);
-        if (Config::overrideGaps) {
+        const auto curRules = std::to_string(pMonitor->activeWorkspaceID()) + ", gapsin:" + std::to_string(config.gapsIn->value()) + ", gapsout:" + std::to_string(config.gapsOut->value());
+        if (config.overrideGaps->value()) {
             if (const auto legacy = Config::Legacy::mgr().lock())
                 legacy->handleWorkspaceRules("", curRules);
         }
@@ -67,7 +67,7 @@ void CHyprspaceWidget::updateLayout() {
         for (auto& ws : g_pCompositor->getWorkspaces()) {
             if (ws && ws->m_monitor && ws->m_monitor->m_id == ownerID) {
                 const auto curRules = std::to_string(ws->m_id) + ", gapsin:" + PGAPSIN->toString() + ", gapsout:" + PGAPSOUT->toString();
-                if (Config::overrideGaps) {
+                if (config.overrideGaps->value()) {
                     if (const auto legacy = Config::Legacy::mgr().lock())
                         legacy->handleWorkspaceRules("", curRules);
                 }

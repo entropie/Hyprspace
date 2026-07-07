@@ -11,12 +11,12 @@ CHyprspaceWidget::CHyprspaceWidget(uint64_t inOwnerID) {
     curAnimation = *curAnimationConfig.pValues.lock();
     *curAnimationConfig.pValues.lock() = curAnimation;
 
-    if (Config::overrideAnimSpeed > 0)
-        curAnimation.internalSpeed = Config::overrideAnimSpeed;
+    if (config.overrideAnimSpeed->value() > 0)
+        curAnimation.internalSpeed = config.overrideAnimSpeed->value();
 
     g_pAnimationManager->createAnimation(0.F, curYOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
     g_pAnimationManager->createAnimation(0.F, workspaceScrollOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
-    curYOffset->setValueAndWarp(Config::panelHeight);
+    curYOffset->setValueAndWarp(config.panelHeight->value());
     workspaceScrollOffset->setValueAndWarp(0);
 }
 
@@ -49,7 +49,7 @@ void CHyprspaceWidget::show() {
 
     // hide top and overlay layers
     // FIXME: ensure input is disabled for hidden layers
-    if (oLayerAlpha.empty() && Config::hideRealLayers) {
+    if (oLayerAlpha.empty() && config.hideRealLayers->value()) {
         for (auto& ls : owner->m_layerSurfaceLayers[2]) {
             //ls->startAnimation(false);
             oLayerAlpha.emplace_back(std::make_tuple(ls.lock(), ls->m_alpha->goal()));
@@ -69,7 +69,7 @@ void CHyprspaceWidget::show() {
     // panel offset should be handled by swipe event when swiping
     if (!swiping) {
         *curYOffset = 0;
-        curSwipeOffset = (Config::panelHeight + Config::reservedArea) * owner->m_scale;
+        curSwipeOffset = (config.panelHeight->value() + config.reservedArea->value()) * owner->m_scale;
     }
 
     updateLayout();
@@ -118,7 +118,7 @@ void CHyprspaceWidget::hide() {
 
     // panel offset should be handled by swipe event when swiping
     if (!swiping) {
-        *curYOffset = (Config::panelHeight + Config::reservedArea) * owner->m_scale;
+        *curYOffset = (config.panelHeight->value() + config.reservedArea->value()) * owner->m_scale;
         curSwipeOffset = -10.;
     }
 
@@ -133,12 +133,12 @@ void CHyprspaceWidget::updateConfig() {
     curAnimation = *curAnimationConfig.pValues.lock();
     *curAnimationConfig.pValues.lock() = curAnimation;
 
-    if (Config::overrideAnimSpeed > 0)
-        curAnimation.internalSpeed = Config::overrideAnimSpeed;
+    if (config.overrideAnimSpeed->value() > 0)
+        curAnimation.internalSpeed = config.overrideAnimSpeed->value();
 
     g_pAnimationManager->createAnimation(0.F, curYOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
     g_pAnimationManager->createAnimation(0.F, workspaceScrollOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
-    curYOffset->setValueAndWarp(Config::panelHeight);
+    curYOffset->setValueAndWarp(config.panelHeight->value());
     workspaceScrollOffset->setValueAndWarp(0);
 }
 
