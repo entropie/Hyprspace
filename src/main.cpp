@@ -10,6 +10,7 @@
 #include <any>
 #include "Overview.hpp"
 #include "Globals.hpp"
+#include "Lua.hpp"
 
 void* pRenderWindow;
 void* pRenderLayer;
@@ -275,7 +276,7 @@ void onTouchUp(const ITouch::SUpEvent& event, SCallbackInfo& info) {
     g_pTouchedMonitor = nullptr;
 }
 
-static SDispatchResult dispatchToggleOverview(std::string arg) {
+SDispatchResult Dispatchers::dispatchToggleOverview(std::string arg) {
     auto currentMonitor = g_pCompositor->getMonitorFromCursor();
     auto widget = getWidgetForMonitor(currentMonitor);
     if (widget) {
@@ -301,7 +302,7 @@ static SDispatchResult dispatchToggleOverview(std::string arg) {
     return SDispatchResult{};
 }
 
-static SDispatchResult dispatchOpenOverview(std::string arg) {
+SDispatchResult Dispatchers::dispatchOpenOverview(std::string arg) {
     if (arg.contains("all")) {
         for (auto& widget : g_overviewWidgets) {
             if (!widget->isActive()) widget->show();
@@ -316,7 +317,7 @@ static SDispatchResult dispatchOpenOverview(std::string arg) {
     return SDispatchResult{};
 }
 
-static SDispatchResult dispatchCloseOverview(std::string arg) {
+SDispatchResult Dispatchers::dispatchCloseOverview(std::string arg) {
     if (arg.contains("all")) {
         for (auto& widget : g_overviewWidgets) {
             if (widget->isActive()) widget->hide();
@@ -427,9 +428,11 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE inHandle) {
     });
     HyprlandAPI::reloadConfig();
 
-    HyprlandAPI::addDispatcherV2(pHandle, "overview:toggle", ::dispatchToggleOverview);
-    HyprlandAPI::addDispatcherV2(pHandle, "overview:open", ::dispatchOpenOverview);
-    HyprlandAPI::addDispatcherV2(pHandle, "overview:close", ::dispatchCloseOverview);
+    HyprlandAPI::addDispatcherV2(pHandle, "overview:toggle", Dispatchers::dispatchToggleOverview);
+    HyprlandAPI::addDispatcherV2(pHandle, "overview:open", Dispatchers::dispatchOpenOverview);
+    HyprlandAPI::addDispatcherV2(pHandle, "overview:close", Dispatchers::dispatchCloseOverview);
+
+    registerLuaBindings(pHandle);
 
     g_pRenderHook = Event::bus()->m_events.render.stage.listen([](eRenderStage stage) { onRender(stage); });
 

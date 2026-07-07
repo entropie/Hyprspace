@@ -178,4 +178,10 @@ namespace HyprConfig {
     }
 }
 
+namespace Dispatchers {
+    SDispatchResult dispatchToggleOverview(std::string arg);
+    SDispatchResult dispatchOpenOverview(std::string arg);
+    SDispatchResult dispatchCloseOverview(std::string arg);
+}
+
 extern int numWorkspaces;
