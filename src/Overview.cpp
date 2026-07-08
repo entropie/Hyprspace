@@ -1,6 +1,8 @@
 #include "Overview.hpp"
 #include "Globals.hpp"
 #include <hyprland/src/config/shared/animation/AnimationTree.hpp>
+#include <hyprland/src/state/WorkspaceState.hpp>
+#include <hyprland/src/state/MonitorState.hpp>
 
 CHyprspaceWidget::CHyprspaceWidget(uint64_t inOwnerID) {
     ownerID = inOwnerID;
@@ -14,8 +16,8 @@ CHyprspaceWidget::CHyprspaceWidget(uint64_t inOwnerID) {
     if (config.overrideAnimSpeed->value() > 0)
         curAnimation.internalSpeed = config.overrideAnimSpeed->value();
 
-    g_pAnimationManager->createAnimation(0.F, curYOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
-    g_pAnimationManager->createAnimation(0.F, workspaceScrollOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
+    Animation::mgr()->createAnimation(0.F, curYOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
+    Animation::mgr()->createAnimation(0.F, workspaceScrollOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
     curYOffset->setValueAndWarp(config.panelHeight->value());
     workspaceScrollOffset->setValueAndWarp(0);
 }
@@ -24,7 +26,7 @@ CHyprspaceWidget::CHyprspaceWidget(uint64_t inOwnerID) {
 CHyprspaceWidget::~CHyprspaceWidget() {}
 
 PHLMONITOR CHyprspaceWidget::getOwner() {
-    return g_pCompositor->getMonitorFromID(ownerID);
+    return State::monitorState()->query().id(ownerID).run();
 }
 
 void CHyprspaceWidget::show() {
@@ -33,7 +35,7 @@ void CHyprspaceWidget::show() {
 
     if (prevFullscreen.empty()) {
         // unfullscreen all windows
-        for (auto& ws : g_pCompositor->getWorkspaces()) {
+        for (auto& ws : State::workspaceState()->workspaces()) {
             if (ws && ws->m_monitor && ws->m_monitor->m_id == ownerID) {
                 const auto w = ws->getFullscreenWindow();
                 if (w != nullptr && ws->m_fullscreenMode != FSMODE_NONE) {
@@ -52,15 +54,13 @@ void CHyprspaceWidget::show() {
     if (oLayerAlpha.empty() && config.hideRealLayers->value()) {
         for (auto& ls : owner->m_layerSurfaceLayers[2]) {
             //ls->startAnimation(false);
-            oLayerAlpha.emplace_back(std::make_tuple(ls.lock(), ls->m_alpha->goal()));
-            *ls->m_alpha = 0.f;
-            ls->m_fadingOut = true;
+            oLayerAlpha.emplace_back(std::make_tuple(ls.lock(), ls->alpha()[Desktop::View::LS_ALPHA_FADE]->goal()));
+            *ls->alpha()[Desktop::View::LS_ALPHA_FADE] = 0.f;
         }
         for (auto& ls : owner->m_layerSurfaceLayers[3]) {
             //ls->startAnimation(false);
-            oLayerAlpha.emplace_back(std::make_tuple(ls.lock(), ls->m_alpha->goal()));
-            *ls->m_alpha = 0.f;
-            ls->m_fadingOut = true;
+            oLayerAlpha.emplace_back(std::make_tuple(ls.lock(), ls->alpha()[Desktop::View::LS_ALPHA_FADE]->goal()));
+            *ls->alpha()[Desktop::View::LS_ALPHA_FADE] = 0.f;
         }
     }
 
@@ -74,7 +74,7 @@ void CHyprspaceWidget::show() {
 
     updateLayout();
     g_pHyprRenderer->damageMonitor(owner);
-    g_pCompositor->scheduleFrameForMonitor(owner);
+    owner->scheduleFrame();
 }
 
 void CHyprspaceWidget::hide() {
@@ -83,21 +83,19 @@ void CHyprspaceWidget::hide() {
 
     // restore layer state
     for (auto& ls : owner->m_layerSurfaceLayers[2]) {
-        if (!ls->m_readyToDelete && ls->m_mapped && ls->m_fadingOut) {
+        if (ls->m_mapped) {
             auto oAlpha = std::find_if(oLayerAlpha.begin(), oLayerAlpha.end(), [&] (const auto& tuple) {return std::get<0>(tuple) == ls;});
             if (oAlpha != oLayerAlpha.end()) {
-                ls->m_fadingOut = false;
-                *ls->m_alpha = std::get<1>(*oAlpha);
+                *ls->alpha()[Desktop::View::LS_ALPHA_FADE] = std::get<1>(*oAlpha);
             }
             //ls->startAnimation(true);
         }
     }
     for (auto& ls : owner->m_layerSurfaceLayers[3]) {
-        if (!ls->m_readyToDelete && ls->m_mapped && ls->m_fadingOut) {
+        if (ls->m_mapped) {
             auto oAlpha = std::find_if(oLayerAlpha.begin(), oLayerAlpha.end(), [&] (const auto& tuple) {return std::get<0>(tuple) == ls;});
             if (oAlpha != oLayerAlpha.end()) {
-                ls->m_fadingOut = false;
-                *ls->m_alpha = std::get<1>(*oAlpha);
+                *ls->alpha()[Desktop::View::LS_ALPHA_FADE] = std::get<1>(*oAlpha);
             }
             //ls->startAnimation(true);
         }
@@ -123,7 +121,7 @@ void CHyprspaceWidget::hide() {
     }
 
     updateLayout();
-    g_pCompositor->scheduleFrameForMonitor(owner);
+    owner->scheduleFrame();
 }
 
 void CHyprspaceWidget::updateConfig() {
@@ -136,8 +134,8 @@ void CHyprspaceWidget::updateConfig() {
     if (config.overrideAnimSpeed->value() > 0)
         curAnimation.internalSpeed = config.overrideAnimSpeed->value();
 
-    g_pAnimationManager->createAnimation(0.F, curYOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
-    g_pAnimationManager->createAnimation(0.F, workspaceScrollOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
+    Animation::mgr()->createAnimation(0.F, curYOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
+    Animation::mgr()->createAnimation(0.F, workspaceScrollOffset, curAnimationConfig.pValues.lock(), AVARDAMAGE_ENTIRE);
     curYOffset->setValueAndWarp(config.panelHeight->value());
     workspaceScrollOffset->setValueAndWarp(0);
 }
