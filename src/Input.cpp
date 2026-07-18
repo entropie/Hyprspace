@@ -61,7 +61,7 @@ bool CHyprspaceWidget::buttonEvent(bool pressed, Vector2D coords) {
         if (targetWindow->m_isFloating) {
             auto targetPos = getOwner()->m_position + (getOwner()->m_size / 2.) - (targetWindow->m_reportedSize / 2.);
             targetWindow->layoutBox().pos() = targetPos;
-            *targetWindow->m_realPosition = targetPos;
+            targetWindow->move(targetPos);
         }
         if (config.switchOnDrop->value()) {
             State::monitorState()->query().id(targetWorkspace->m_monitor->m_id).run()->changeWorkspace(targetWorkspace->m_id);
